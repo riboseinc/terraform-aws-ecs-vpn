@@ -1,0 +1,12 @@
+= Terraform Jenkins Module
+
+Jenkins is a bit special since we are using two accounts at the same time:
+- US account: ECS and rest
+- SG account: Route 53
+
+This is what you have to set:
+export TF_VAR_route53_account_access_key=[your SG access key]
+export TF_VAR_route53_account_secret_key=[your SG secret key]
+
+RUN: AWS_PROFILE=us terraform plan
+i.e. using the AWS US profile for all resources, but use SG for Route 53

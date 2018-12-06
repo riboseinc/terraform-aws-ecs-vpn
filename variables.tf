@@ -1,0 +1,33 @@
+variable "enable-asg" {}
+variable "enable-service" {}
+variable "aws-region" {}
+variable "aws-ami-account-id" {}
+variable "ebs-id" {}
+variable "name" {}
+variable "ami-ecs" {}
+variable "ami-vpn" {}
+variable "public_key" {}
+variable "slave_public_key" {}
+variable "vpc_cidr" {}
+variable "dns-public-name" {}
+variable "dns-internal-name" {}
+variable "ssh-ip" {}
+variable "file-ssl-cert-body" {}
+variable "file-ssl-cert-chain" {}
+variable "file-ssl-cert-key" {}
+variable "bootstrap" {}
+variable "instance_type" {}
+variable "instance_type_vpn" {}
+variable "env" {}
+variable "identifier" {}
+variable "ports" {
+  type = "map"
+}
+variable "dyn-access-iam-group-name" {}
+variable "dyn-iam-s3-bucket" {}
+variable "elb-int-name" {}
+variable "allow-vpn-git-pull-roles" {
+  type = "list"
+}
+variable "infrastructure_release" {}
+variable "vpn_cidr_block" {}

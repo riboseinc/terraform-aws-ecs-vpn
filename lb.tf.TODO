@@ -1,0 +1,138 @@
+# https://gist.github.com/nathanpeck/a8537e21627b3a0f3e735eecbe6f6384
+# TODO: Enable these when ECS supports multiple ports per ECS Service
+
+# resource "aws_lb" "web" {
+#   name = "${var.env}-${var.identifier}-lb-web"
+#   internal           = true
+#   load_balancer_type = "application"
+#
+#
+#   security_groups    = ["${aws_security_group.lb_sg.id}"]
+#   subnets            = ["${aws_subnet.public.*.id}"]
+#
+#   enable_deletion_protection = true
+#
+#   access_logs {
+#     bucket  = "${aws_s3_bucket.lb_logs.bucket}"
+#     prefix  = "test-lb"
+#     enabled = true
+#   }
+#
+#   tags {
+#     DEPLOYMENT = "${var.env}-${var.identifier}"
+#   }
+# }
+#
+# resource "aws_lb_listener" "web" {
+#   load_balancer_arn = "${aws_lb.web.arn}"
+#   port              = "${var.ports["https"]}"
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2015-05"
+#   certificate_arn   = "${aws_iam_server_certificate.main.arn}"
+#
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = "${aws_lb_target_group.web.arn}"
+#   }
+# }
+#
+# resource "aws_lb_listener" "web-to-https" {
+#   load_balancer_arn = "${aws_lb.web.arn}"
+#   port              = "${var.ports["http"]}"
+#   protocol          = "HTTP"
+#
+#   default_action {
+#     type = "redirect"
+#     redirect {
+#       port = "${var.ports["https"]}"
+#       protocol = "HTTPS"
+#       status_code = "HTTP_301"
+#     }
+#   }
+# }
+#
+# resource "aws_lb_target_group" "web" {
+#   name = "${var.env}-${var.identifier}-tg-web"
+#   port     = "${var.ports["jenkins_http"]}"
+#   protocol = "HTTP"
+#   vpc_id   = "${aws_vpc.main.id}"
+#
+#   health_check {
+#     path = "/"
+#     port = "${var.ports["jenkins_http"]}"
+#     protocol = "HTTP"
+#     timeout = 15
+#     matcher = "200-302"
+#   }
+# }
+#
+#
+# resource "aws_lb_listener" "docker" {
+#   load_balancer_arn = "${aws_lb.web.arn}"
+#   port              = "${var.ports["docker"]}"
+#   protocol          = "HTTP"
+#
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = "${aws_lb_target_group.docker.arn}"
+#   }
+# }
+#
+# resource "aws_lb_target_group" "docker" {
+#   name = "${var.env}-${var.identifier}-tg-docker"
+#   port     = "${var.ports["docker"]}"
+#   protocol = "HTTP"
+#   vpc_id   = "${aws_vpc.main.id}"
+#
+#   health_check {
+#     path = "/containers/json"
+#     port = "${var.ports["docker"]}"
+#     protocol = "HTTP"
+#     timeout = 15
+#     matcher = "200-299"
+#   }
+#
+# }
+#
+#
+# resource "aws_lb" "jnlp" {
+#   name = "${var.env}-${var.identifier}-lb-jnlp"
+#   internal           = true
+#   load_balancer_type = "network"
+#   subnets = [ "${aws_subnet.primary.id}" ]
+#
+#   enable_deletion_protection = false
+#   # TODO: deal with these from CLB
+#   #idle_timeout = 900
+#   #connection_draining = false
+#   #connection_draining_timeout = 300
+#
+#   tags {
+#     DEPLOYMENT = "${var.env}-${var.identifier}"
+#   }
+# }
+#
+#
+# resource "aws_lb_listener" "jnlp" {
+#   load_balancer_arn = "${aws_lb.front_end.arn}"
+#   port              = "${var.ports["jnlp"]}"
+#   protocol          = "TCP"
+#
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = "${aws_lb_target_group.jnlp.arn}"
+#   }
+# }
+#
+# resource "aws_lb_target_group" "jnlp" {
+#   name = "${var.env}-${var.identifier}-tg-jnlp"
+#   port     = "${var.ports["jnlp"]}"
+#   protocol = "TCP"
+#   vpc_id   = "${aws_vpc.main.id}"
+#
+#   health_check {
+#     port = "traffic-port"
+#     protocol = "TCP"
+#   }
+# }
+
