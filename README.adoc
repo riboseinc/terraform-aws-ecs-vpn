@@ -1,12 +1,202 @@
-= Terraform Jenkins Module
+= Terraform module to setup ECS cluster and VPN server for Jenkins
 
-Jenkins is a bit special since we are using two accounts at the same time:
-- US account: ECS and rest
-- SG account: Route 53
+This module helps you create Jenkins ECS task service and the related task role, assuming that:
 
-This is what you have to set:
-export TF_VAR_route53_account_access_key=[your SG access key]
-export TF_VAR_route53_account_secret_key=[your SG secret key]
+* you have created AMIs for the instances of Jenkins Cluster and VPN server
+* you have created a EBS volume id of Jenkins
+* you have created a SSL certificate
+* you have created a bootstrap file to be executed while launching.
+* and of course, your AWS account provides you access to all these resources necessary.
 
-RUN: AWS_PROFILE=us terraform plan
-i.e. using the AWS US profile for all resources, but use SG for Route 53
+== Sample Usage
+
+You can literally copy and paste the following example, change the following attributes, and you're ready to go:
+
+* `enable-asg` set it to `true` to enable auto scaling
+* `name` set it to the name of Jenkins (e.g., `jenkins`)
+* `aws-region` set it to name of AWS region
+* `aws-ami-account-id` set it to account id of AMI owner
+* `ebs-id` set it to EBS volume id of Jenkins
+* `vpc_cidr` set it to CIDR of VPC
+* `instance_type_vpn` set it to instance type of VPN server
+* `dns-public-name` set it to public domain name
+* `dns-internal-name` set it to internal domain name
+* `file-ssl-cert-body` set it to SSL certificate body
+* `file-ssl-cert-chain` set it to SSL certificate chain
+* `file-ssl-cert-key` set it to SSL certificate key
+* `bootstrap` set it to a bootstrap file
+* `instance_type` set it to instance type of ECS server instance
+* `env` set it to the name of environment name (e.g., `test`)
+* `identifier` set it to the identifier (e.g., `myidentifier`)
+* `ports` set it to ports of `ssh`, `http`, `https`, `openvpn`
+* `ami-ecs` set it to a value to filter the name of AMI of ECS server instance
+* `ami-vpn` set it to a value to filter the name of AMI of VPN server instance
+* `public_key` set it to ssh public key for host
+* `slave_public_key` set it to ssh public key for slave
+* `ssh-ip` set it to CIDR to allow ssh
+* `elb-int-name` set it to the name of internal ELB
+* `dyn-iam-s3-bucket` set it to S3 bucket for dynamic security group
+* `dyn-access-iam-group-name` set it to IAM group name allowed to have dynamic access
+* `allow-vpn-git-pull-roles` set it to an array of roles allowed to pull from codecommit
+* `infrastructure_release` set it to an value to tag the infrastructure
+* `vpn_cidr_block` set it to CIDR allowed for ingress of VPN
+
+
+[source,hcl]
+----
+# include this module and enter the values of input variables
+module "ecs" {
+  source = "github.com/riboseinc/terraform-aws-ecs-vpn"
+
+  enable-asg = "${var.enable-asg}"
+  name = "${var.name}"
+  aws-region = "${var.aws-region}"
+  aws-ami-account-id = "${var.aws-ami-account-id}"
+  ebs-id = "${data.aws_ebs_volume.jenkins_home.id}"
+  vpc_cidr = "${var.vpc_cidr}"
+  instance_type_vpn = "${var.instance_type_vpn}"
+  dns-public-name = "${var.dns-public-name}"
+  dns-internal-name = "${var.dns-internal-name}"
+  file-ssl-cert-body = "${file("${var.file-ssl-cert-body}")}"
+  file-ssl-cert-chain = "${file("${var.file-ssl-cert-chain}")}"
+  file-ssl-cert-key = "${file("${var.file-ssl-cert-key}")}"
+  bootstrap = "${file("${var.bootstrap}")}"
+  instance_type = "${var.instance_type}"
+  env = "${var.env}"
+  identifier = "${var.identifier}"
+  ports = "${var.ports}"
+  ami-ecs = "${var.ami-ecs}"
+  ami-vpn = "${var.ami-vpn}"
+  public_key = "${file("${var.public_key_path}")}"
+  slave_public_key = "${file("${var.slave_public_key_path}")}"
+  ssh-ip = "${var.ssh-ip}"
+  elb-int-name = "${var.elb-int-name}"
+  dyn-iam-s3-bucket = "${var.dyn-iam-s3-bucket}"
+  dyn-access-iam-group-name = "${var.dyn-access-iam-group-name}"
+  allow-vpn-git-pull-roles = "${var.allow-vpn-git-pull-roles}"
+  infrastructure_release = "${var.infrastructure_release}"
+  vpn_cidr_block = "${var.vpn_cidr_block}"
+}
+
+variable "enable-asg" {
+  default = "true"
+}
+
+variable "name" {
+  default = "jenkins"
+}
+
+variable "aws-region" {
+  default = "us-east-1"
+}
+
+variable "aws-ami-account-id" {
+  default = "12345678"
+}
+
+variable "ebs-id" {
+  default = "ebs-id"
+}
+
+variable "vpc_cidr" {
+  default = "10.1.0.0/16"
+}
+
+variable "instance_type_vpn" {
+  default = "t2.micro"
+}
+
+variable "dns-public-name" {
+  default = "doamin.com"
+}
+
+variable "dns-internal-name" {
+  default = "domain.local"
+}
+
+variable "file-ssl-cert-body" {
+  default = "./cert/ssl.certificate"
+}
+
+variable "file-ssl-cert-chain" {
+  default = "./cert/ssl.intermediate"
+}
+
+variable "file-ssl-cert-key" {
+  default = "./cert/ssl.key"
+}
+
+variable "bootstrap" {
+  default = "./bootstrap.sh"
+}
+
+variable "instance_type" {
+  default = "t2.micro"
+}
+
+variable "env" {
+  default = "test"
+}
+
+variable "identifier" {
+  default = "myidentifier"
+}
+
+variable "ports" {
+  default = {
+    ssh     = 22
+    http    = 80
+    https   = 443
+    openvpn = 1194
+  }
+}
+
+variable "ami-ecs" {
+  default = "rhel7.*"
+}
+
+variable "ami-vpn" {
+  default = "rhel7.*"
+}
+
+variable "public_key_apth" {
+  default = "./keys/my_host_key.pub"
+}
+
+variable "slave_public_key_path" {
+  default = "./keys/my_slave_key.pub"
+}
+
+variable "ssh-ip" {
+  default = "1.2.3.4/32"
+}
+
+variable "elb-int-name" {
+  default = "elb-int-name"
+}
+
+variable "dyn-iam-s3-bucket" {
+  default = "dyn-iam-s3-bucket"
+}
+
+variable "dyn-access-iam-group-name" {
+  default = "dyn-access-iam-group-name"
+}
+
+variable "allow-vpn-git-pull-roles" {
+  type    = "list"
+  default = [
+      "arn:aws:iam::accid:role/role_1",
+      "arn:aws:iam::accid:role/role_2"
+    ]
+}
+
+variable "infrastructure_release" {
+  default = "1"
+}
+
+variable "vpn_cidr_block" {
+  default = "1.2.3.4/32"
+}
+
+----

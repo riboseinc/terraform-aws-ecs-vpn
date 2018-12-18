@@ -1,5 +1,4 @@
 variable "enable-asg" {}
-variable "enable-service" {}
 variable "aws-region" {}
 variable "aws-ami-account-id" {}
 variable "ebs-id" {}
